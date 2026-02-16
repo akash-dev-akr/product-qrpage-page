@@ -2,217 +2,307 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Stock Status Scanner</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>SKS | Current Stock</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #0f172a;
-            --accent: #2563eb;
-            --success: #059669;
-            --bg: #f1f5f9;
+            --saffron: #ff8c00;
+            --deep-saffron: #e65100;
+            --cream: #fffdf5;
+            --maroon: #5d1010;
+            --success-bg: #e8f5e9;
+            --success-text: #2e7d32;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #fff9eb;
             margin: 0;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 20px;
+            overflow-x: hidden;
         }
 
-        /* The Card Layout from your style */
-        .stock-card {
-            background: white;
-            width: 100%;
-            max-width: 360px;
-            border-radius: 28px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        /* Subtle Glow */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at top left, rgba(255,140,0,0.1), transparent 40%);
+            z-index: -1;
+        }
+
+        .app-container {
+            width: 90%;
+            max-width: 380px;
+            margin: 20px auto;
+        }
+
+        .premium-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 30px 60px rgba(230, 81, 0, 0.1);
             overflow: hidden;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
         }
 
-        .header-bar {
-            height: 8px;
-            background: var(--accent);
-        }
-
-        /* Camera Scanner Box */
+        /* Camera Window */
         #reader {
             width: 100%;
+            background: #000;
             border: none !important;
+            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
         }
 
         .content {
-            padding: 40px 24px;
+            padding: 30px 25px 40px 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .brand-logo {
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 3px;
+            color: var(--deep-saffron);
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        #status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: #fff3e0;
+            border-radius: 100px;
+            color: var(--deep-saffron);
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        #info-section {
+            width: 100%;
+            text-align: center;
         }
 
         #name {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 800;
-            color: var(--primary);
-            margin: 0 0 8px 0;
+            color: var(--maroon);
+            margin: 0;
             line-height: 1.2;
         }
 
-        .product-code {
-            font-size: 14px;
-            color: #64748b;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 30px;
+        #display-code {
+            font-size: 13px;
+            color: #a1887f;
+            font-weight: 500;
+            margin-top: 6px;
             display: block;
         }
 
-        .balance-container {
-            background: #f8fafc;
-            border-radius: 20px;
-            padding: 24px;
-            border: 1px solid #e2e8f0;
+        /* Balanced Stock View */
+        .stock-view {
+            margin: 25px 0;
+            padding: 35px 20px;
+            background: linear-gradient(145deg, #ffffff, #fffcf7);
+            border-radius: 35px;
+            border: 1px solid rgba(230, 81, 0, 0.05);
+            box-shadow: 10px 10px 30px rgba(230, 81, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .balance-label {
-            font-size: 12px;
-            font-weight: 700;
-            color: #94a3b8;
+        .stock-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #bcaaa4;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 4px;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
         }
 
         #balance {
-            font-size: 42px;
+            font-size: 64px;
             font-weight: 800;
-            color: var(--success);
+            color: var(--deep-saffron);
             margin: 0;
+            line-height: 1;
         }
 
-        .unit {
-            font-size: 16px;
-            color: #64748b;
-            margin-left: 4px;
-        }
-
-        .btn-scan {
-            margin-top: 20px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
+        /* Button Styling */
+        .btn-action {
             width: 100%;
+            padding: 18px;
+            border-radius: 20px;
+            border: none;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .footer {
-            margin-top: 30px;
-            font-size: 12px;
-            color: #94a3b8;
+        .btn-primary {
+            background: var(--deep-saffron);
+            color: white;
+            box-shadow: 0 12px 24px rgba(230, 81, 0, 0.2);
+            margin-top: 10px;
         }
 
-        /* Scanner button styling to match your theme */
-        #reader__dashboard_section_csr button {
-            background: var(--accent) !important;
-            color: white !important;
-            border: none !important;
-            padding: 8px 16px !important;
-            border-radius: 8px !important;
-            font-family: 'Inter', sans-serif;
+        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-secondary {
+            background: #fff;
+            color: var(--maroon);
+            border: 1px solid #f3e5f5;
+            margin-top: 15px;
+        }
+
+        #qr-input-file { display: none; }
+
+        .footer-tag {
+            margin-top: 25px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #d7ccc8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-<div class="stock-card">
-    <div class="header-bar" id="top-bar"></div>
-    
-    <div id="reader"></div>
+<div class="app-container">
+    <div class="premium-card">
+        <div id="reader"></div>
 
-    <div class="content">
-        <h1 id="name">Ready to Scan</h1>
-        <span id="display-code" class="product-code">Center QR in frame</span>
-
-        <div id="result-area" style="display: none;">
-            <div class="balance-container">
-                <div class="balance-label">Closing Balance</div>
-                <p id="balance">--</p>
+        <div class="content">
+            <div class="brand-logo">Sri Krishna Sweets</div>
+            
+            <div id="status-pill">
+                <span id="status-text">Scanning Production...</span>
             </div>
-            <button class="btn-scan" onclick="resetScanner()">Scan Another</button>
-        </div>
 
-        <div class="footer">
-            <span id="timestamp">Waiting for scan...</span>
+            <div id="info-section">
+                <h1 id="name">Live Stock</h1>
+                <span id="display-code">Align QR within the frame</span>
+
+                <div id="result-view" style="display: none;">
+                    <div class="stock-view">
+                        <div class="stock-label">Closing Balance</div>
+                        <p id="balance">0</p>
+                    </div>
+                </div>
+
+                <div style="width: 100%; margin-top: 10px;">
+                    <button id="btn-reset" class="btn-action btn-primary" onclick="resetScanner()" style="display: none;">
+                        Scan Next Product
+                    </button>
+                    
+                    <div id="upload-box">
+                        <label for="qr-input-file" class="btn-action btn-secondary" style="display: block; text-align: center;">
+                            Upload Product Photo
+                        </label>
+                        <input type="file" id="qr-input-file" accept="image/*">
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-tag"> </div>
         </div>
     </div>
 </div>
 
 <script>
-// 1. YOUR CONFIGURATION
 const apiURL = "https://script.google.com/macros/s/AKfycbwqGL0IldmoV2oA343EwneSp59iPogBwrXb3qnRyUCpPjrpF9JajhLwZqdLiFvB3iSv6Q/exec";
-const html5QrCode = new Html5Qrcode("reader");
+let html5QrCode;
 
-// 2. START SCANNER
+window.onload = () => {
+    html5QrCode = new Html5Qrcode("reader");
+    startScanner();
+};
+
 function startScanner() {
     html5QrCode.start(
         { facingMode: "environment" }, 
-        { fps: 10, qrbox: { width: 200, height: 200 } },
+        { fps: 25, qrbox: { width: 220, height: 220 } },
         onScanSuccess
-    ).catch(err => {
-        document.getElementById("name").innerText = "Camera Error";
+    ).catch(() => {
+        document.getElementById("status-text").innerText = "Manual Mode";
     });
 }
 
-// 3. ON SUCCESSFUL SCAN
-function onScanSuccess(decodedText) {
-    // Stop camera and hide scanner box
-    html5QrCode.stop();
-    document.getElementById("reader").style.display = "none";
-    
-    // UI Feedback
-    document.getElementById("name").innerText = "Searching...";
-    document.getElementById("display-code").innerText = "Code: " + decodedText;
-    document.getElementById("result-area").style.display = "block";
+document.getElementById('qr-input-file').addEventListener('change', async e => {
+    if (e.target.files.length == 0) return;
+    if (html5QrCode.isScanning) await html5QrCode.stop();
+    document.getElementById("status-text").innerText = "Processing Image...";
+    html5QrCode.scanFile(e.target.files[0], true)
+        .then(onScanSuccess)
+        .catch(() => {
+            alert("No QR found. Use a clearer photo.");
+            startScanner();
+        });
+});
 
-    // API Call to Google Sheets
+function onScanSuccess(decodedText) {
+    if (window.navigator.vibrate) window.navigator.vibrate(80);
+
+    if (html5QrCode.isScanning) {
+        html5QrCode.stop().then(() => document.getElementById("reader").style.display = "none");
+    } else {
+        document.getElementById("reader").style.display = "none";
+    }
+
+    const statusPill = document.getElementById("status-pill");
+    const statusText = document.getElementById("status-text");
+    
+    statusText.innerText = "Syncing...";
+    document.getElementById("name").innerText = "Fetching Data...";
+    
     fetch(`${apiURL}?code=${encodeURIComponent(decodedText)}`)
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-        if(data.product){
+        document.getElementById("result-view").style.display = "block";
+        document.getElementById("btn-reset").style.display = "block";
+        document.getElementById("upload-box").style.display = "none";
+
+        if(data.product) {
             document.getElementById("name").innerText = data.product;
-            document.getElementById("balance").innerHTML = data.closingBalance + '<span class="unit">Qty</span>';
-            document.getElementById("timestamp").innerText = "Last checked: " + new Date().toLocaleTimeString();
-            document.getElementById("top-bar").style.background = "var(--success)";
+            document.getElementById("display-code").innerText = "Product Alias: " + decodedText;
+            document.getElementById("balance").innerText = data.closingBalance;
+            statusText.innerText = "Item Synced";
+            statusPill.style.background = "#e8f5e9";
+            statusPill.style.color = "#2e7d32";
         } else {
             document.getElementById("name").innerText = "Not Found";
-            document.getElementById("balance").innerText = "0";
-            document.getElementById("top-bar").style.background = "#ef4444";
+            document.getElementById("balance").innerText = "---";
+            statusText.innerText = "Check Code";
+            statusPill.style.background = "#ffebee";
+            statusPill.style.color = "#c62828";
         }
     })
-    .catch(error => {
-        document.getElementById("name").innerText = "Error";
-        document.getElementById("display-code").innerText = "Connection Failed";
+    .catch(() => {
+        document.getElementById("name").innerText = "Connection Error";
     });
 }
 
-// 4. RESET SCANNER
 function resetScanner() {
-    document.getElementById("result-area").style.display = "none";
-    document.getElementById("reader").style.display = "block";
-    document.getElementById("name").innerText = "Ready to Scan";
-    document.getElementById("display-code").innerText = "Center QR in frame";
-    document.getElementById("top-bar").style.background = "var(--accent)";
-    startScanner();
+    location.reload();
 }
-
-// Initialize
-window.onload = startScanner;
 </script>
 
 </body>
