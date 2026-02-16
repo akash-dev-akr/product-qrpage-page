@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Smart Inventory Scanner</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Stock Status Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #0f172a;
             --accent: #2563eb;
-            --success: #10b981;
+            --success: #059669;
             --bg: #f1f5f9;
         }
 
@@ -18,160 +18,201 @@
             font-family: 'Inter', sans-serif;
             background: var(--bg);
             margin: 0;
-            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-
-        .container { width: 100%; max-width: 400px; }
-
-        /* Scanner Styling */
-        #reader {
-            width: 100%;
-            background: white;
-            border-radius: 24px;
-            overflow: hidden;
-            border: none !important;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        }
-
-        /* Result Card Styling */
-        .result-card {
-            display: none;
-            background: white;
-            border-radius: 28px;
-            padding: 30px;
-            margin-top: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            text-align: center;
-            animation: slideUp 0.4s ease;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        #prod-name { font-size: 24px; font-weight: 800; color: var(--primary); margin: 0; }
-        .sku-tag { 
-            font-size: 12px; font-weight: 600; color: #64748b; 
-            background: #f1f5f9; padding: 4px 12px; border-radius: 100px; 
-            display: inline-block; margin: 10px 0 20px;
-        }
-
-        .balance-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 20px;
+            justify-content: center;
+            min-height: 100vh;
             padding: 20px;
         }
 
-        .label { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; }
-        #prod-balance { font-size: 42px; font-weight: 800; color: var(--accent); margin: 5px 0; }
-
-        .btn-reset {
-            margin-top: 20px;
+        /* The Card Layout from your style */
+        .stock-card {
+            background: white;
             width: 100%;
-            padding: 15px;
-            border: none;
-            background: var(--primary);
-            color: white;
-            border-radius: 14px;
-            font-weight: 600;
-            cursor: pointer;
+            max-width: 360px;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            text-align: center;
         }
 
-        /* Adjusting the library's UI */
-        #reader__dashboard_section_csr button {
-            padding: 10px 20px;
+        .header-bar {
+            height: 8px;
             background: var(--accent);
+        }
+
+        /* Camera Scanner Box */
+        #reader {
+            width: 100%;
+            border: none !important;
+        }
+
+        .content {
+            padding: 40px 24px;
+        }
+
+        #name {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0 0 8px 0;
+            line-height: 1.2;
+        }
+
+        .product-code {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            display: block;
+        }
+
+        .balance-container {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .balance-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        #balance {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--success);
+            margin: 0;
+        }
+
+        .unit {
+            font-size: 16px;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .btn-scan {
+            margin-top: 20px;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 8px;
-            margin-top: 10px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* Scanner button styling to match your theme */
+        #reader__dashboard_section_csr button {
+            background: var(--accent) !important;
+            color: white !important;
+            border: none !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 style="text-align:center; color: var(--primary);">Inventory Scan</h2>
+<div class="stock-card">
+    <div class="header-bar" id="top-bar"></div>
     
     <div id="reader"></div>
 
-    <div id="result" class="result-card">
-        <div id="status-icon" style="font-size: 40px; margin-bottom: 10px;">📦</div>
-        <h1 id="prod-name">Product Name</h1>
-        <span id="prod-code" class="sku-tag">SKU: --</span>
+    <div class="content">
+        <h1 id="name">Ready to Scan</h1>
+        <span id="display-code" class="product-code">Center QR in frame</span>
 
-        <div class="balance-box">
-            <div class="label">Available Stock</div>
-            <p id="prod-balance">0</p>
+        <div id="result-area" style="display: none;">
+            <div class="balance-container">
+                <div class="balance-label">Closing Balance</div>
+                <p id="balance">--</p>
+            </div>
+            <button class="btn-scan" onclick="resetScanner()">Scan Another</button>
         </div>
 
-        <button class="btn-reset" onclick="resetScanner()">Scan Next Item</button>
+        <div class="footer">
+            <span id="timestamp">Waiting for scan...</span>
+        </div>
     </div>
 </div>
 
 <script>
-    // 1. YOUR CONFIGURATION
-    const apiURL = "https://script.google.com/macros/s/AKfycbwqGL0IldmoV2oA343EwneSp59iPogBwrXb3qnRyUCpPjrpF9JajhLwZqdLiFvB3iSv6Q/exec";
+// 1. YOUR CONFIGURATION
+const apiURL = "https://script.google.com/macros/s/AKfycbwqGL0IldmoV2oA343EwneSp59iPogBwrXb3qnRyUCpPjrpF9JajhLwZqdLiFvB3iSv6Q/exec";
+const html5QrCode = new Html5Qrcode("reader");
+
+// 2. START SCANNER
+function startScanner() {
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        { fps: 10, qrbox: { width: 200, height: 200 } },
+        onScanSuccess
+    ).catch(err => {
+        document.getElementById("name").innerText = "Camera Error";
+    });
+}
+
+// 3. ON SUCCESSFUL SCAN
+function onScanSuccess(decodedText) {
+    // Stop camera and hide scanner box
+    html5QrCode.stop();
+    document.getElementById("reader").style.display = "none";
     
-    const html5QrCode = new Html5Qrcode("reader");
-    const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+    // UI Feedback
+    document.getElementById("name").innerText = "Searching...";
+    document.getElementById("display-code").innerText = "Code: " + decodedText;
+    document.getElementById("result-area").style.display = "block";
 
-    // 2. START THE SCANNER
-    const startScanner = () => {
-        html5QrCode.start(
-            { facingMode: "environment" }, // Use back camera
-            qrConfig,
-            onScanSuccess
-        );
-    };
+    // API Call to Google Sheets
+    fetch(`${apiURL}?code=${encodeURIComponent(decodedText)}`)
+    .then(response => response.json())
+    .then(data => {
+        if(data.product){
+            document.getElementById("name").innerText = data.product;
+            document.getElementById("balance").innerHTML = data.closingBalance + '<span class="unit">Qty</span>';
+            document.getElementById("timestamp").innerText = "Last checked: " + new Date().toLocaleTimeString();
+            document.getElementById("top-bar").style.background = "var(--success)";
+        } else {
+            document.getElementById("name").innerText = "Not Found";
+            document.getElementById("balance").innerText = "0";
+            document.getElementById("top-bar").style.background = "#ef4444";
+        }
+    })
+    .catch(error => {
+        document.getElementById("name").innerText = "Error";
+        document.getElementById("display-code").innerText = "Connection Failed";
+    });
+}
 
-    // 3. WHAT HAPPENS WHEN A QR IS FOUND
-    function onScanSuccess(decodedText, decodedResult) {
-        // Stop scanner to focus on data
-        html5QrCode.stop();
-        document.getElementById("reader").style.display = "none";
-        
-        // Show loading state
-        const resultCard = document.getElementById("result");
-        resultCard.style.display = "block";
-        document.getElementById("prod-name").innerText = "Searching...";
-        
-        // Fetch from Google Sheets
-        fetch(`${apiURL}?code=${encodeURIComponent(decodedText)}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.product) {
-                    document.getElementById("status-icon").innerText = "✅";
-                    document.getElementById("prod-name").innerText = data.product;
-                    document.getElementById("prod-code").innerText = "SKU: " + decodedText;
-                    document.getElementById("prod-balance").innerText = data.closingBalance;
-                } else {
-                    document.getElementById("status-icon").innerText = "❌";
-                    document.getElementById("prod-name").innerText = "Not Found";
-                    document.getElementById("prod-code").innerText = "Code: " + decodedText;
-                    document.getElementById("prod-balance").innerText = "--";
-                }
-            })
-            .catch(err => {
-                alert("Error connecting to database");
-                resetScanner();
-            });
-    }
+// 4. RESET SCANNER
+function resetScanner() {
+    document.getElementById("result-area").style.display = "none";
+    document.getElementById("reader").style.display = "block";
+    document.getElementById("name").innerText = "Ready to Scan";
+    document.getElementById("display-code").innerText = "Center QR in frame";
+    document.getElementById("top-bar").style.background = "var(--accent)";
+    startScanner();
+}
 
-    // 4. RESET TO SCAN AGAIN
-    function resetScanner() {
-        document.getElementById("result").style.display = "none";
-        document.getElementById("reader").style.display = "block";
-        startScanner();
-    }
-
-    // Initialize on load
-    window.onload = startScanner;
+// Initialize
+window.onload = startScanner;
 </script>
 
 </body>
